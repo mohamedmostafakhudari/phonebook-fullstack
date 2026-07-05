@@ -121,7 +121,7 @@ const App = () => {
 			personService
 				.deleteOne(id)
 				.then((responseStatus) => {
-					if (responseStatus === 200) {
+					if (responseStatus === 204) {
 						setPersons(persons.filter((p) => p.id !== id));
 
 						setSuccessMessage(`Deleted ${personToDelete.name}`);

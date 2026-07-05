@@ -27,26 +27,28 @@ app.use(
 	),
 );
 
+app.use(express.static("dist"));
+
 let persons = [
 	{
 		id: "1",
 		name: "Arto Hellas",
-		number: "040-123456",
+		phoneNumber: "040-123456",
 	},
 	{
 		id: "2",
 		name: "Ada Lovelace",
-		number: "39-44-5323523",
+		phoneNumber: "39-44-5323523",
 	},
 	{
 		id: "3",
 		name: "Dan Abramov",
-		number: "12-43-234345",
+		phoneNumber: "12-43-234345",
 	},
 	{
 		id: "4",
 		name: "Mary Poppendieck",
-		number: "39-23-6423122",
+		phoneNumber: "39-23-6423122",
 	},
 ];
 
@@ -84,16 +86,15 @@ app.delete("/api/persons/:id", (req, res) => {
 	const personId = req.params.id;
 
 	persons = persons.filter((p) => p.id !== personId);
-
 	res.status(204).end();
 });
 
 app.post("/api/persons", (req, res) => {
 	const body = req.body;
 
-	if (!body.name || !body.number) {
+	if (!body.name || !body.phoneNumber) {
 		res.status(400).json({
-			message: "missing required data [ name, number ]",
+			message: "missing required data [ name, phoneNumber ]",
 		});
 		return;
 	}
@@ -108,7 +109,7 @@ app.post("/api/persons", (req, res) => {
 
 	const newPerson = {
 		name: body.name,
-		number: body.number,
+		phoneNumber: body.phoneNumber,
 		id: utils.generateId(),
 	};
 
