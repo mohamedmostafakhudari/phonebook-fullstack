@@ -1,0 +1,61 @@
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
+	margin: 0;
+	padding: 0;
+}
+
+html {
+	font-family: Lora, Georgia, "Times New Roman", Times, serif;
+}
+
+body {
+	padding: 0.5rem;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+	margin-bottom: 1rem;
+}
+
+section + section {
+	margin-top: 1.5rem;
+}
+
+input {
+	padding-inline: 0.2rem;
+	padding-block: 0.1rem;
+	width: 100%;
+	max-width: 150px;
+	border: 1px solid hsl(0, 0%, 75%);
+
+	&:focus {
+		outline: none;
+		border-color: transparent;
+		box-shadow: 0px 0px 2px 2px hsla(197, 87%, 44%, 0.767);
+	}
+}
+
+button {
+	padding-inline: 0.4rem;
+	padding-block: 0.1rem;
+	border: 1px solid #ccc;
+	border-radius: 2px;
+	box-shadow: 1px 2px 2px #888888d3;
+	cursor: pointer;
+
+	&:hover,
+	&:active {
+		background-image: linear-gradient(
+			180deg,
+			hsl(202, 87%, 18%),
+			hsl(202, 89%, 39%),
+			hsl(202, 87%, 18%)
+		);
+	}
+}

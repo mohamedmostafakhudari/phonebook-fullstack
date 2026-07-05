@@ -1,0 +1,6 @@
+@BASE_URL = http://localhost:3001
+
+# GET INFO PAGE
+GET {{BASE_URL}}/info HTTP/1.1
+
+###
