@@ -1,5 +1,6 @@
 const express = require("express");
 const morgan = require("morgan");
+const path = require("path");
 const utils = require("./utils.js");
 
 const app = express();
@@ -27,7 +28,7 @@ app.use(
 	),
 );
 
-app.use(express.static("dist"));
+app.use(express.static(path.join(__dirname, "../dist")));
 
 let persons = [
 	{
@@ -51,10 +52,6 @@ let persons = [
 		phoneNumber: "39-23-6423122",
 	},
 ];
-
-app.get("/", (req, res) => {
-	res.send(`<h1>Hello World!</h1>`);
-});
 
 app.get("/info", (req, res) => {
 	const pageContent = [
@@ -118,6 +115,6 @@ app.post("/api/persons", (req, res) => {
 	res.json(newPerson);
 });
 const PORT = process.env.PORT || 3001;
-app.listen(PORT, () => {
+app.listen(PORT, "0.0.0.0", () => {
 	console.log(`Server is running on port ${PORT}`);
 });
