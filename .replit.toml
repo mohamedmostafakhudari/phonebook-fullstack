@@ -1,6 +1,10 @@
 modules = ["nodejs-24"]
-run = "npm start"
+
+# Development run button instructions
+run = "cd backend && npm start"
 
 [deployment]
-run = "npm start"
-build = "npm run build"
+# Production build and execution instructions
+build = "cd backend && npm install && npm run build"
+run = "cd backend && npm start"
+ignorePorts = true
