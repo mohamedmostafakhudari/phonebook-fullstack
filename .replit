@@ -6,6 +6,6 @@ run = "bash -c 'cd backend && npm start'"
 [deployment]
 # Production build and execution instructions
 build = "bash -c 'cd backend && npm install && npm run build'"
-run = "bash -c 'cd backend && node index.js'"
+run = "bash -c 'cd backend && node src/index.js'"
 ignorePorts = true
 deploymentTarget = "cloudrun"
