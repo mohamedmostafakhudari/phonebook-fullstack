@@ -4,9 +4,11 @@ import useFilter from "./hooks/useFilter";
 import Filter from "./components/Filter";
 import PersonForm from "./components/PersonForm";
 import personService from "./services/persons";
+import infoService from "./services/info";
 import Notification from "./components/Notification";
 
 const App = () => {
+	const [info, setInfo] = useState(null);
 	const [persons, setPersons] = useState([]);
 	const [newEntry, setNewEntry] = useState({
 		name: "",
@@ -59,7 +61,7 @@ const App = () => {
 				}, 5000);
 			})
 			.catch((error) => {
-				setErrorMessage(`couldn't add person, ${error.message}`);
+				setErrorMessage(error.response.data.error);
 				setTimeout(() => {
 					setErrorMessage("");
 				}, 5000);
@@ -74,7 +76,7 @@ const App = () => {
 	const updatePhoneNumber = (id, newPhoneNumber) => {
 		const person = persons.find((p) => p.id === id);
 
-		const updatedPerson = { ...person, phoneNumber: newPhoneNumber };
+		const updatedPerson = { name: person.name, phoneNumber: newPhoneNumber };
 
 		personService
 			.update(id, updatedPerson)
@@ -156,10 +158,25 @@ const App = () => {
 				}, 5000);
 			});
 	}, []);
+
+	useEffect(() => {
+		infoService
+			.getInfo()
+			.then((initialInfo) => {
+				setInfo(initialInfo);
+			})
+			.catch((error) => {
+				setErrorMessage(`couldn't fetch persons data, ${error.message}`);
+				setTimeout(() => {
+					setErrorMessage("");
+				}, 5000);
+			});
+	}, [persons]);
 	return (
 		<div>
 			<section>
 				<h1>Phonebook</h1>
+				<pre>{info}</pre>
 				<Notification message={infoMessage} />
 				<Notification
 					message={successMessage}
@@ -169,6 +186,8 @@ const App = () => {
 					message={errorMessage}
 					variation="error"
 				/>
+			</section>
+			<section>
 				<Filter
 					searchTerm={searchTerm}
 					setSearchTerm={setSearchTerm}

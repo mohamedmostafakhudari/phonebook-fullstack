@@ -5,21 +5,19 @@ GET {{BASE_URL}}/api/persons HTTP/1.1
 
 ###
 
-# get person with unknown ID (Example: 5)
+# get person with ID
 
-GET {{BASE_URL}}/api/persons/5 HTTP/1.1
-
+GET {{BASE_URL}}/api/persons/6a4e2d763cbdf7efe5c05c96 HTTP/1.1
 ###
-
-# get person with known ID (Example: 1)
-
+GET {{BASE_URL}}/api/persons/6a4e2d763cbdf7efe5c05c97 HTTP/1.1
+###
 GET {{BASE_URL}}/api/persons/1 HTTP/1.1
 
 ###
 
 # delete person given ID 
 
-DELETE {{BASE_URL}}/api/persons/4 HTTP/1.1
+DELETE {{BASE_URL}}/api/persons/6a4e7b8f44b0c9524adf71d5 HTTP/1.1
 
 ###
 
@@ -30,13 +28,9 @@ Content-Type: application/json
 
 {
   "name": "CyberFrost",
-  "number": "39-44-5323530"
+  "phoneNumber": "39-44-5323530"
 }
-
 ###
-
-# add new person invalid request ( with missing required data)
-
 POST {{BASE_URL}}/api/persons HTTP/1.1
 Content-Type: application/json
 
@@ -44,16 +38,24 @@ Content-Type: application/json
   "name": "CyberFrost",
   "age": 20
 }
-
 ###
-
-# add new person ( with adding not needed data)
-
 POST {{BASE_URL}}/api/persons HTTP/1.1
 Content-Type: application/json
 
 {
   "name": "CyberFrost1",
-  "number": "39-44-5323531", 
+  "phoneNumber": "39-44-5323531", 
   "age": 20
+}
+
+###
+
+# Update Person Data
+
+PUT {{BASE_URL}}/api/persons/6a4f8593bc223c6995ab95f1 HTTP/1.1
+Content-Type: application/json
+
+{
+  "name": "new person",
+  "phoneNumber": "12345678"
 }

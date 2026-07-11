@@ -1,9 +1,16 @@
+require("dotenv").config();
 const express = require("express");
 const morgan = require("morgan");
 const path = require("path");
+const mongoose = require("mongoose");
 const utils = require("./utils.js");
-
+const errorHandler = require("./middlewares/errorHandler.js");
+const requestLogger = require("./middlewares/requestLogger.js");
+const db = require("./lib/db.js");
+const Person = require("./models/person.js");
 const app = express();
+
+app.use(express.static(path.join(__dirname, "../dist")));
 
 app.use(
 	express.json({
@@ -13,80 +20,75 @@ app.use(
 	}),
 );
 
-morgan.token("raw-body", function (req) {
-	if (!req.rawBody) return "No body";
+app.use(requestLogger());
 
-	return req.rawBody
-		.replace(/[\r\n]+/g, " ") // Replace all newlines with a single space
-		.replace(/\s+/g, " ") // Collapse multiple spaces into one single space
-		.trim(); // Remove leading/trailing spaces
+app.get("/api/info", (req, res) => {
+	Person.countDocuments()
+		.then((count) => {
+			const pageContent = [
+				`Phonebook has info for ${count} people`,
+				String(new Date()),
+			].join("\n");
+
+			res.json(pageContent);
+		})
+		.catch((error) => next(error));
 });
 
-app.use(
-	morgan(
-		":method :url :status :res[content-length] - :response-time ms :raw-body",
-	),
-);
-
-app.use(express.static(path.join(__dirname, "../dist")));
-
-let persons = [
-	{
-		id: "1",
-		name: "Arto Hellas",
-		phoneNumber: "040-123456",
-	},
-	{
-		id: "2",
-		name: "Ada Lovelace",
-		phoneNumber: "39-44-5323523",
-	},
-	{
-		id: "3",
-		name: "Dan Abramov",
-		phoneNumber: "12-43-234345",
-	},
-	{
-		id: "4",
-		name: "Mary Poppendieck",
-		phoneNumber: "39-23-6423122",
-	},
-];
-
-app.get("/info", (req, res) => {
-	const pageContent = [
-		`Phonebook has info for ${persons.length} people`,
-		String(new Date()),
-	].join("\n");
-
-	res.send(pageContent);
+app.get("/api/persons", (req, res, next) => {
+	Person.find({})
+		.then((persons) => {
+			res.json(persons);
+		})
+		.catch((error) => next(error));
 });
 
-app.get("/api/persons", (req, res) => {
-	res.json(persons);
-});
-
-app.get("/api/persons/:id", (req, res) => {
+app.get("/api/persons/:id", (req, res, next) => {
 	const personId = req.params.id;
 
-	const person = persons.find((p) => p.id === personId);
-	if (!person) {
-		res.statusMessage = `A person with ID ${personId} is not found`;
-		res.status(404).end();
-		return;
+	// 1. Check if the string matches MongoDB's ObjectId structure
+	// 2. Double-check that casting it back doesn't change the string
+	const isValid =
+		mongoose.Types.ObjectId.isValid(personId) &&
+		new mongoose.Types.ObjectId(personId).toString() === personId;
+
+	if (!isValid) {
+		return res.status(400).json({ error: "Invalid MongoDB ObjectId format" });
 	}
 
-	res.json(person);
+	Person.findById(personId)
+		.then((foundPerson) => {
+			if (!foundPerson) {
+				res.statusMessage = `A person with ID ${personId} is not found`;
+				res.status(404).end();
+				return;
+			}
+			res.json(foundPerson);
+		})
+		.catch((error) => next(error));
 });
 
-app.delete("/api/persons/:id", (req, res) => {
+app.delete("/api/persons/:id", (req, res, next) => {
 	const personId = req.params.id;
 
-	persons = persons.filter((p) => p.id !== personId);
-	res.status(204).end();
+	// 1. Check if the string matches MongoDB's ObjectId structure
+	// 2. Double-check that casting it back doesn't change the string
+	const isValid =
+		mongoose.Types.ObjectId.isValid(personId) &&
+		new mongoose.Types.ObjectId(personId).toString() === personId;
+
+	if (!isValid) {
+		return res.status(400).json({ error: "Invalid MongoDB ObjectId format" });
+	}
+
+	Person.findByIdAndDelete(personId)
+		.then(() => {
+			res.status(204).end();
+		})
+		.catch((error) => next(error));
 });
 
-app.post("/api/persons", (req, res) => {
+app.post("/api/persons", (req, res, next) => {
 	const body = req.body;
 
 	if (!body.name || !body.phoneNumber) {
@@ -96,25 +98,82 @@ app.post("/api/persons", (req, res) => {
 		return;
 	}
 
-	const personExists = persons.find((p) => p.name === body.name);
-	if (personExists) {
+	Person.findOne({ name: body.name })
+		.then((foundPerson) => {
+			if (foundPerson) {
+				res.status(400).json({
+					message: "name must be unique",
+				});
+
+				return null;
+			}
+
+			const newPerson = new Person({
+				name: body.name,
+				phoneNumber: body.phoneNumber,
+			});
+
+			return newPerson.save();
+		})
+		.then((savedPerson) => {
+			if (savedPerson) {
+				res.json(savedPerson);
+			}
+		})
+		.catch((error) => next(error));
+});
+
+app.put("/api/persons/:id", (req, res, next) => {
+	const personId = req.params.id;
+	const body = req.body;
+
+	if (!body.name || !body.phoneNumber) {
 		res.status(400).json({
-			message: "name must be unique",
+			message: "missing required data [ name, phoneNumber ]",
 		});
 		return;
 	}
 
-	const newPerson = {
-		name: body.name,
-		phoneNumber: body.phoneNumber,
-		id: utils.generateId(),
-	};
+	// 1. Check if the string matches MongoDB's ObjectId structure
+	// 2. Double-check that casting it back doesn't change the string
+	const isValid =
+		mongoose.Types.ObjectId.isValid(personId) &&
+		new mongoose.Types.ObjectId(personId).toString() === personId;
 
-	persons = persons.concat(newPerson);
+	if (!isValid) {
+		return res.status(400).json({ error: "Invalid MongoDB ObjectId format" });
+	}
 
-	res.json(newPerson);
+	Person.findById(personId)
+		.then((foundPerson) => {
+			if (!foundPerson) {
+				return res.status(404).end();
+			}
+
+			foundPerson.name = body.name;
+			foundPerson.phoneNumber = body.phoneNumber;
+
+			return foundPerson.save().then((updatedPerson) => {
+				res.json(updatedPerson);
+			});
+		})
+		.catch((err) => {
+			res.status(500).json({ error: err.message });
+		});
 });
+
+const unknownEndpoint = (request, response) => {
+	response.status(404).send({ error: "unknown endpoint" });
+};
+
+app.use(unknownEndpoint);
+
+app.use(errorHandler);
+
 const PORT = process.env.PORT || 3001;
-app.listen(PORT, "0.0.0.0", () => {
-	console.log(`Server is running on port ${PORT}`);
+
+db.connect().then(() => {
+	app.listen(PORT, "0.0.0.0", () => {
+		console.log(`Server is running on port ${PORT}`);
+	});
 });
