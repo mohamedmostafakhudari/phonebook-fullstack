@@ -8,3 +8,4 @@ run = "bash -c 'cd backend && npm start'"
 build = "bash -c 'cd backend && npm install && npm run build'"
 run = "bash -c 'cd backend && npm start'"
 ignorePorts = true
+deploymentTarget = "cloudrun"
